@@ -5,7 +5,8 @@ Usage:
     python postman_inventory.py COLLECTION.json --csv    # CSV
 
 Also warns on stderr when the collection contains literal credentials, which
-means it must not be committed or shared. Standard library only.
+means it must not be committed or shared. Warnings name where a credential is,
+never its value. Standard library only; reads the file and makes no network calls.
 """
 from __future__ import annotations
 
@@ -17,16 +18,24 @@ import sys
 from pathlib import Path
 from typing import Any, Iterator
 
-SECRET_NAME = re.compile(r"pass(word)?|secret|token|api[-_]?key|auth|cookie|session|bearer", re.I)
+SECRET_NAME = re.compile(
+    r"passw(or)?d|passphrase|^pass$|secret|token|api[-_]?key|(^|[-_])auth(orization)?$"
+    r"|cookie|session|bearer|credential|private[-_]?key",
+    re.I,
+)
 TEMPLATE_ONLY = re.compile(r"^\s*\{\{[^}]+\}\}\s*$")
+URL_PASSWORD = re.compile(r"^\s*[a-z][a-z0-9+.-]*://[^/@\s:]*:([^/@\s]+)@", re.I)
+RAW_JSON_FIELD = re.compile(r'"([^"\\]+)"\s*:\s*"([^"\\]*)"')
 # In an apikey auth block, "key" is the header name and "value" is the secret.
 AUTH_SECRET_KEYS = {"token", "password", "value", "secret", "accessToken", "clientSecret"}
+# Spreadsheet apps run a cell that starts with one of these as a formula.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
 
 
-def is_literal_secret(name: str, value: Any) -> bool:
+def is_literal_secret(name: str | None, value: Any) -> bool:
     if not isinstance(value, str) or not value.strip():
         return False
-    return bool(SECRET_NAME.search(name)) and not TEMPLATE_ONLY.match(value)
+    return bool(SECRET_NAME.search(name or "")) and not TEMPLATE_ONLY.match(value)
 
 
 def walk(items: list[dict], folder: tuple[str, ...] = ()) -> Iterator[tuple[tuple[str, ...], dict]]:
@@ -65,6 +74,35 @@ def auth_secrets(auth: dict | None, where: str) -> list[str]:
     return found
 
 
+def url_secrets(url: Any, where: str) -> list[str]:
+    found = []
+    raw = url if isinstance(url, str) else (url or {}).get("raw", "")
+    password = URL_PASSWORD.match(raw)
+    if password and not TEMPLATE_ONLY.match(password.group(1)):
+        found.append(f"{where}: password in URL")
+    # Disabled parameters still sit in the file, so check them too.
+    if isinstance(url, dict) and url.get("query"):
+        pairs = [(q.get("key"), q.get("value")) for q in url["query"] if isinstance(q, dict)]
+    else:
+        pairs = re.findall(r"[?&]([^=&#]+)=([^&#]*)", raw)
+    for key, value in pairs:
+        if is_literal_secret(key, value):
+            found.append(f"{where}: literal value in query parameter '{key}'")
+    return found
+
+
+def body_secrets(body: dict, where: str) -> list[str]:
+    mode = body.get("mode", "")
+    if mode in ("urlencoded", "formdata"):
+        pairs = [(f.get("key"), f.get("value")) for f in body.get(mode) or [] if isinstance(f, dict)]
+    elif mode == "raw":
+        pairs = RAW_JSON_FIELD.findall(body.get("raw") or "")
+    else:
+        pairs = []
+    return [f"{where}: literal value in body field '{key}'"
+            for key, value in pairs if is_literal_secret(key, value)]
+
+
 def scan(collection: dict) -> tuple[list[dict], list[str]]:
     rows, warnings = [], []
     warnings += auth_secrets(collection.get("auth"), "collection")
@@ -76,7 +114,7 @@ def scan(collection: dict) -> tuple[list[dict], list[str]]:
         req = item["request"]
         if isinstance(req, str):  # bare URL shorthand
             req = {"method": "GET", "url": req}
-        name = " / ".join(folder + (item.get("name", ""),))
+        name = " ".join(" / ".join(folder + (item.get("name", ""),)).split())
         path, query = url_parts(req.get("url"))
         body = req.get("body") or {}
         rows.append({
@@ -89,10 +127,20 @@ def scan(collection: dict) -> tuple[list[dict], list[str]]:
             "status": "untested",
         })
         warnings += auth_secrets(req.get("auth"), name)
+        warnings += url_secrets(req.get("url"), name)
+        warnings += body_secrets(body, name)
         for header in req.get("header", []) or []:
             if isinstance(header, dict) and is_literal_secret(header.get("key", ""), header.get("value")):
                 warnings.append(f"{name}: literal value in header '{header.get('key')}'")
     return rows, warnings
+
+
+def md_cell(value: str) -> str:
+    return " ".join(value.split()).replace("|", "\\|")
+
+
+def csv_cell(value: str) -> str:
+    return "'" + value if value.startswith(FORMULA_START) else value
 
 
 def main() -> int:
@@ -108,12 +156,12 @@ def main() -> int:
     if args.csv:
         writer = csv.DictWriter(sys.stdout, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows({f: csv_cell(row[f]) for f in fields} for row in rows)
     else:
         print("| " + " | ".join(fields) + " |")
         print("|" + "---|" * len(fields))
         for row in rows:
-            print("| " + " | ".join(row[f].replace("|", "\\|") for f in fields) + " |")
+            print("| " + " | ".join(md_cell(row[f]) for f in fields) + " |")
 
     print(f"{len(rows)} requests", file=sys.stderr)
     if warnings:

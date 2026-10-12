@@ -5,9 +5,10 @@ reading the saved file back in a fresh Excel instance.
 
 .DESCRIPTION
 Refuses to run while Excel is running, while an owner (~$) file exists, or while
-the workbook is locked. Backs the workbook up, writes in a private Excel
-instance, refuses read-only opens, and re-reads every written cell afterwards.
-Exits 1 on any guard failure or verification mismatch.
+the workbook is locked. Refuses text values that Excel would store as formulas.
+Backs the workbook up, writes in a private Excel instance with macros disabled
+and external links not updated, refuses read-only opens, and re-reads every
+written cell afterwards. Exits 1 on any guard failure or verification mismatch.
 
 .EXAMPLE
 .\Set-ExcelCells.ps1 -Path .\prices.xls -Sheet Sheet1 -Values @{ B2 = 19.99; C2 = 'Discontinued' }
@@ -39,6 +40,12 @@ if ($Values -isnot [hashtable]) { throw '-Values must be a hashtable or a JSON o
 $Path = (Resolve-Path -LiteralPath $Path).Path
 foreach ($cell in $Values.Keys) {
     if ($cell -notmatch '^[A-Za-z]{1,3}[0-9]+$') { throw "Not a single-cell address: '$cell'" }
+    $value = $Values[$cell]
+    # Excel stores text starting with = + - @ as a formula, which can call out to
+    # the network (WEBSERVICE) or other programs (DDE). Write plain values only.
+    if ($value -is [string] -and $value -match '^[=+\-@]') {
+        throw "Value for $cell starts with '$($value[0])', so Excel would store it as a formula. Pass numbers as numbers; this script writes plain values only."
+    }
 }
 
 function Assert-WorkbookFree([string]$File) {
@@ -63,8 +70,12 @@ function Invoke-WithWorkbook([string]$File, [bool]$ReadOnly, [scriptblock]$Actio
     $excel = New-Object -ComObject Excel.Application
     $excel.Visible = $false
     $excel.DisplayAlerts = $false
+    # COM opens files with macros enabled by default. 3 = msoAutomationSecurityForceDisable.
+    $excel.AutomationSecurity = 3
+    $excel.AskToUpdateLinks = $false
     $wb = $null
     try {
+        # UpdateLinks = 0: don't refresh external links on open.
         $wb = $excel.Workbooks.Open($File, 0, $ReadOnly)
         & $Action $wb
     } finally {
@@ -105,7 +116,10 @@ Invoke-WithWorkbook $Path $false {
     if ($wb.ReadOnly) { throw 'Excel opened the workbook read-only; nothing was written.' }
     $ws = $wb.Worksheets.Item($Sheet)
     foreach ($cell in $Values.Keys) {
-        $ws.Range($cell).Value2 = $Values[$cell]
+        # Set Value2 through reflection. Windows PowerShell caches a COM setter by
+        # the first value's type, so a later value of another type fails to cast.
+        $range = $ws.Range($cell)
+        [void]$range.GetType().InvokeMember('Value2', [Reflection.BindingFlags]::SetProperty, $null, $range, @($Values[$cell]))
     }
     $wb.Save()
 }

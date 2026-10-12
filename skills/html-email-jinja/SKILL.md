@@ -65,6 +65,11 @@ html = env.get_template("campaigns/spring-sale/template.html").render(**data, ca
 
 - **Autoescape on.** Mark trusted rich-text copy with `|safe` deliberately, and
   never mark user-supplied values that way.
+- **Templates are code.** Render only templates from the repo. Never turn
+  user-supplied or fetched text into a template (`Template(text)`,
+  `env.from_string(text)`), because that allows server-side template injection.
+  If other people must supply templates, render them in
+  `jinja2.sandbox.SandboxedEnvironment`.
 - **Cache-busting.** Append `?v={{ cache_buster }}` (a render timestamp) to
   images you overwrite in place on a CDN, so a re-send doesn't serve a stale
   asset.
@@ -95,3 +100,6 @@ copy says they do.
 Never send a live campaign from automation. Create a **draft** in the email
 platform and hand it to a person. Test sends go to an internal seed list, and
 only with explicit approval.
+
+Read the platform's API key from an environment variable. Never put it in a
+template, a data file or the rendered output.

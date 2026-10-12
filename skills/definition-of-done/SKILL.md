@@ -38,10 +38,12 @@ scripts\snapshot.ps1 [-ProjectPath <dir>]      # Windows PowerShell
 
 Both copy the project to `archive/<YYYY-MM-DD_HHmmss>/`. They skip `.git`,
 virtualenvs, `node_modules` and caches at any depth, plus top-level `archive`,
-`build`, `dist` and `target`. They warn if `archive/` is not git-ignored.
+`build`, `dist` and `target`. They refuse to run if `archive/` is not
+git-ignored.
 
-- The snapshot includes ignored files such as `.env`, so `archive/` must stay
-  git-ignored.
+- The snapshot includes ignored files such as `.env`. That is why `archive/`
+  must be git-ignored. Otherwise, pass an archive folder outside the repo.
+  Never commit, upload or share a snapshot.
 - It sits on the same disk. It is a quick rollback, not a backup.
 - If the working tree is clean and the change will be committed, git is already
   the restore point. Snapshot when there is uncommitted work, or ignored and

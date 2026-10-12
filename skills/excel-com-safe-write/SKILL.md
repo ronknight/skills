@@ -39,16 +39,24 @@ Related traps that are just as quiet:
 3. **Use your own instance.** `New-Object -ComObject Excel.Application` in
    PowerShell, `win32com.client.DispatchEx("Excel.Application")` in Python.
    Never attach to a running instance.
-4. **Check `ReadOnly` after opening.** If it's true, close without saving and
+4. **Open with macros off.** A COM-started Excel runs workbook macros by
+   default. Set `AutomationSecurity = 3` (force-disable) before
+   `Workbooks.Open`, and pass `UpdateLinks = 0` so external links aren't
+   fetched. Treat `.xls` and `.xlsm` from anyone else as untrusted.
+5. **Check `ReadOnly` after opening.** If it's true, close without saving and
    stop.
-5. **Keep the format.** `Save()` keeps the original format. If you need
+6. **Write values, not formulas.** Excel stores text that starts with `=`, `+`,
+   `-` or `@` as a formula, and a formula can reach the network (`WEBSERVICE`)
+   or other programs (DDE). Refuse such strings unless the user asked for that
+   formula, and pass numbers as numbers.
+7. **Keep the format.** `Save()` keeps the original format. If you need
    `SaveAs`, pass `FileFormat` explicitly (56 = `.xls`, 51 = `.xlsx`,
    52 = `.xlsm`). Otherwise the bytes may not match the extension.
-6. **Clean up in `finally`.** `Close($false)`, `Quit()`, then
+8. **Clean up in `finally`.** `Close($false)`, `Quit()`, then
    `ReleaseComObject` on the workbook and application and run the garbage
    collector. In Python, drop the references and call `pythoncom.CoUninitialize()`
    in threads where you called `CoInitialize()`.
-7. **Verify from a fresh process.** Re-read every cell you wrote, from a new
+9. **Verify from a fresh process.** Re-read every cell you wrote, from a new
    read-only Excel instance or an independent reader library, and compare. Don't
    trust the script's own success message.
 
@@ -77,6 +85,7 @@ above to single-cell edits:
 When calling from another shell with `powershell -File`, pass `-Values` as a
 JSON object instead: `'{"B2": 19.99, "C2": "Discontinued"}'`.
 
-If a guard trips, it exits 1 without touching the file. It prints the backup
+It refuses text values that would become formulas. If a guard trips, it exits 1
+without touching the file. It prints the backup
 path once the backup exists, and exits 1 with the mismatching cells if
 verification fails.
