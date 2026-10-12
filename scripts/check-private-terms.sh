@@ -38,7 +38,7 @@ names_match() {
 
 check "private term in file content" git grep --untracked -n -i -F -f "$terms"
 check "private term in file name" names_match
-check "e-mail address" sh -c "git grep --untracked -n -E '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | grep -vE '@(example\.(com|org|net)|users\.noreply\.github\.com)'"
+check "e-mail address" sh -c "git grep --untracked -n -E '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | grep -viE '@(example\.(com|org|net)|users\.noreply\.github\.com)'"
 check "user-profile path" git grep --untracked -n -i -E -e '[a-z]:[\\/]+users[\\/]+' -e '/home/[a-z]' -e '/users/[a-z]'
 
 if [ "$found" -ne 0 ]; then

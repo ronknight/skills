@@ -33,6 +33,9 @@ None of the scripts make network calls or install anything.
 | `Set-ExcelCells.ps1` | One workbook | The cells you pass, plus a timestamped `.bak` copy. Opens the workbook with macros disabled and external links not updated, and refuses text that Excel would store as a formula. |
 | `lint_email.py` | Rendered HTML files | Nothing; prints a report |
 | `postman_inventory.py` | One Postman collection | Nothing; prints an inventory. Names where literal credentials are but never prints them, and neutralises spreadsheet formulas in CSV output. |
+| `check_agent_files.py` | Instruction files in one repository (`AGENTS.md`, `CLAUDE.md`, tool rule folders) | Nothing; prints a report |
+| `inventory_repos.py` | Every folder under the root you pass; runs read-only `git` commands (`remote get-url`, `log`, `rev-list`, `status`, `ls-files`) | Nothing; prints an inventory. Neutralises spreadsheet formulas in CSV output. Its output lists local paths and remotes, so keep it private. |
+| `sniff_spreadsheet.py` | The first bytes, and for OLE2 files the stream names, of the files you pass | Nothing; prints what each file really is |
 | `scripts/check-private-terms.sh` | Files git would publish | Nothing (maintenance only, not installed with any skill) |
 | `scripts/check_audits.py` | The skills.sh audit API | Nothing (maintenance only, not installed with any skill) |
 
@@ -45,6 +48,21 @@ None of the scripts make network calls or install anything.
   user.
 - `html-email-jinja` renders email. It keeps autoescaping on, forbids building
   templates from untrusted text, and leaves live sends to a person.
+- `reversible-bulk-updates` writes through APIs. It requires an environment
+  confirmation, a per-record archive before every write, a dry run first, and a
+  read-back, and it stops on unexpected changes.
+- `suitecrm-api` talks to a CRM. It reads credentials from environment
+  variables, escapes values placed in the API's raw SQL query strings, and
+  makes merges preview-only unless an explicit apply flag and approval are
+  given.
+- `email-list-verification` sends addresses to a third-party service. It
+  requires approval and a data-processing check first, never a permanent
+  public file link, and redaction of API keys that services take in query
+  strings.
+- `email-campaign-attribution` is read-only against every source and forbids
+  sending personal data to GA4.
+- `ollama-batch-generation` treats every record as data inside the prompt and
+  writes nothing that hasn't passed validation.
 - `ai-safety-guardrails` is the policy the others follow: name the action, check
   it can be undone, dry-run, and ask first.
 

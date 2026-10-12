@@ -3,6 +3,20 @@
 ## [Unreleased]
 
 ### Added
+#### 2026-10-12 - Nine more skills
+General practice drawn from real projects, with no project-specific names, paths, credentials or vendor findings.
+
+- **`skills/ollama-batch-generation/`** - resumable, cached, validated local-LLM batch jobs; tri-state vision verdicts.
+- **`skills/agent-instructions-single-source/`** - one `AGENTS.md` with imports or pointers; `check_agent_files.py` finds copies, drift and orphan files no tool reads.
+- **`skills/workspace-inventory/`** - classify every project folder from evidence; `inventory_repos.py` (read-only, ages git repos by last commit, groups duplicates by root commit).
+- **`skills/reversible-bulk-updates/`** - archive-before-write, diff-only writes, read-back and restore for API bulk changes.
+- **`skills/email-campaign-attribution/`** - last-click attribution within a window, identity rules, honest metrics; `references/attribution.sql` (tested in DuckDB).
+- **`skills/email-list-verification/`** - batch verification pattern, one action map across providers, bounce handling.
+- **`skills/suitecrm-api/`** - v4_1 REST traps, V8 basics, email search, preview-first duplicate merges.
+- **`skills/legacy-xls-python/`** - library choice, template-preserving copies, `.xls` limits; `sniff_spreadsheet.py` detects what a file really is.
+- **`skills/print-tiff-to-web-images/`** - CMYK to sRGB, transparency without holes, sizing, URL checks (recipes tested with ImageMagick 7.1).
+- **`README.md`, `SECURITY.md`** - new skills, script requirements, and what each new script reads and writes.
+
 #### 2026-10-12 - Security docs and audit check
 skills.sh runs five security auditors on each skill after its first install, so the repo now documents what each script touches and can show the results in one place.
 

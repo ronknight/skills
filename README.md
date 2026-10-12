@@ -15,6 +15,15 @@ in real work, written up so an agent avoids it.
 | [`excel-com-safe-write`](skills/excel-com-safe-write/SKILL.md) | Editing `.xls`, `.xlsx` or `.xlsm` through Excel COM on Windows, or when an Excel automation reported success but the change is missing. | `Set-ExcelCells.ps1` |
 | [`html-email-jinja`](skills/html-email-jinja/SKILL.md) | Building or debugging HTML marketing emails rendered from Jinja templates, so they hold up in Gmail, Outlook and dark mode. | Skeleton template, `lint_email.py` |
 | [`api-audit`](skills/api-audit/SKILL.md) | Integrating with a vendor API whose docs are incomplete, or when an update returns success but nothing changes. | Report template, `postman_inventory.py` |
+| [`reversible-bulk-updates`](skills/reversible-bulk-updates/SKILL.md) | Changing many records through an API with no undo. Archives each record first, writes only the diff, reads back, and can restore. | |
+| [`ollama-batch-generation`](skills/ollama-batch-generation/SKILL.md) | Generating copy, labels or vision verdicts for hundreds of records with a local model, without bad output or lost progress. | |
+| [`agent-instructions-single-source`](skills/agent-instructions-single-source/SKILL.md) | Several AI assistants work on one repo. One `AGENTS.md`, imports or pointers at the paths each tool really reads, and an audit for drifted copies. | `check_agent_files.py` |
+| [`workspace-inventory`](skills/workspace-inventory/SKILL.md) | A projects folder has grown out of control. Classifies every folder (active, dormant, duplicate, vendored, stub) from evidence. | `inventory_repos.py` |
+| [`email-campaign-attribution`](skills/email-campaign-attribution/SKILL.md) | Asked which email campaigns drive revenue. Last-click attribution within a window, honest metrics, and the caveats every number needs. | Attribution SQL |
+| [`email-list-verification`](skills/email-list-verification/SKILL.md) | Verifying a mailing list through a bulk verification service, or classifying bounces. | |
+| [`suitecrm-api`](skills/suitecrm-api/SKILL.md) | Scripting against SuiteCRM 7 (v4_1 REST or V8), searching by email, or merging duplicate accounts. | |
+| [`legacy-xls-python`](skills/legacy-xls-python/SKILL.md) | An importer needs real Excel 97-2003 `.xls`, or a "spreadsheet" won't open. Detects what the file really is and picks the right library. | `sniff_spreadsheet.py` |
+| [`print-tiff-to-web-images`](skills/print-tiff-to-web-images/SKILL.md) | Converting print TIFF product photos for the web: colours, transparency without holes, sizes, and checking published URLs. | |
 
 ## Install
 
@@ -45,7 +54,8 @@ bundled scripts have requirements:
 | `snapshot.sh` | Bash and `tar` (macOS, Linux, Git Bash); `git` optional |
 | `snapshot.ps1` | Windows PowerShell 5.1 or PowerShell 7 on Windows; `git` optional |
 | `Set-ExcelCells.ps1` | Windows with Microsoft Excel installed |
-| `lint_email.py`, `postman_inventory.py` | Python 3.8 or later, standard library only |
+| `lint_email.py`, `postman_inventory.py`, `check_agent_files.py`, `sniff_spreadsheet.py` | Python 3.8 or later, standard library only |
+| `inventory_repos.py` | Python 3.8 or later, standard library only; `git` on the PATH |
 
 ## Security
 
