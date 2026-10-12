@@ -1,0 +1,9 @@
+# Local list of private terms the pre-commit scan blocks. Never commit it.
+.private-terms.txt
+
+archive/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+*.stackdump

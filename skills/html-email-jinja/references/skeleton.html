@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title>{{ subject }}</title>
+  <style type="text/css">
+    @media only screen and (max-width: 620px) {
+      .container { width: 100% !important; }
+      .stack { display: block !important; width: 100% !important; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .bg-body { background-color: #111111 !important; }
+      .bg-card { background-color: #1e1e1e !important; }
+      .text { color: #f2f2f2 !important; }
+    }
+  </style>
+</head>
+<body class="bg-body" style="margin:0;padding:0;background-color:#f4f4f4;">
+  <!-- Preheader: shown in the inbox preview, hidden in the body. -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{ preheader }}&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-body" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="container bg-card" style="width:600px;max-width:600px;background-color:#ffffff;">
+          <tr>
+            <td style="padding:0;">
+              <a href="{{ hero_link }}"><img src="{{ hero_image }}?v={{ cache_buster }}" width="600" alt="{{ hero_alt }}" style="display:block;border:0;width:100%;max-width:600px;height:auto;" /></a>
+            </td>
+          </tr>
+          <tr>
+            <td class="text" style="padding:24px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:24px;color:#222222;">
+              <h1 style="margin:0 0 12px;font-size:24px;line-height:30px;">{{ title }}</h1>
+              {{ body_html | safe }}
+            </td>
+          </tr>
+          {% for row in products | batch(2) %}
+          <tr>
+            <td style="padding:0 12px 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  {% for p in row %}
+                  <td class="stack text" width="50%" valign="top" style="padding:12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;color:#222222;">
+                    <a href="{{ p.link }}"><img src="{{ p.image }}" width="264" alt="{{ p.name }}" style="display:block;border:0;width:100%;max-width:264px;height:auto;" /></a>
+                    <p style="margin:8px 0 4px;"><a href="{{ p.link }}" style="color:#222222;text-decoration:none;">{{ p.name }}</a></p>
+                    <p style="margin:0;font-weight:bold;">{{ p.price }}</p>
+                  </td>
+                  {% endfor %}
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td align="center" style="padding:12px 24px 32px;">
+              <!-- Bulletproof button: padding and colour live on the td. -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="#0b5fff" style="border-radius:4px;padding:12px 28px;">
+                    <a href="{{ cta_link }}" style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;display:inline-block;">{{ cta_text }}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="text" align="center" style="padding:16px 24px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;color:#666666;">
+              {{ footer_html | safe }}
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
